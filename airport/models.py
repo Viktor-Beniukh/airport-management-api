@@ -55,6 +55,10 @@ class Airplane(models.Model):
         AirplaneType, on_delete=models.CASCADE, related_name="airplanes"
     )
 
+    @property
+    def capacity(self) -> int:
+        return self.rows * self.seats_in_row
+
     class Meta:
         ordering = ("name",)
 
@@ -102,6 +106,7 @@ class Flight(models.Model):
     )
     departure_time = models.DateTimeField(blank=True, null=True)
     arrival_time = models.DateTimeField(blank=True, null=True)
+    crews = models.ManyToManyField(Crew, blank=True)
 
     def __str__(self):
         return str(self.id)
