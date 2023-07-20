@@ -1,4 +1,6 @@
+from django.db import transaction
 from rest_framework import serializers
+from rest_framework.exceptions import ValidationError
 
 from airport.models import (
     AirplaneType,
@@ -48,7 +50,9 @@ class AirplaneSerializer(serializers.ModelSerializer):
 
 
 class AirplaneListSerializer(serializers.ModelSerializer):
-    airplane_type_name = serializers.CharField(source="airplane_type.name", read_only=True)
+    airplane_type_name = serializers.CharField(
+        source="airplane_type.name", read_only=True
+    )
 
     class Meta:
         model = Airplane
@@ -110,16 +114,61 @@ class FlightSerializer(serializers.ModelSerializer):
 
 
 class FlightListSerializer(serializers.ModelSerializer):
-    airplane_name = serializers.CharField(source="airplane.name", read_only=True)
+    airplane_name = serializers.CharField(
+        source="airplane.name", read_only=True
+    )
+    airplane_image = serializers.ImageField(
+        source="airplane.image", read_only=True
+    )
     route = serializers.StringRelatedField(read_only=True)
     departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    airplane_capacity = serializers.IntegerField(
+        source="airplane.capacity", read_only=True
+    )
+    tickets_available = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = Flight
         fields = (
-            "id", "airplane_name", "route", "departure_time", "arrival_time"
+            "id",
+            "airplane_name",
+            "airplane_image",
+            "route",
+            "departure_time",
+            "arrival_time",
+            "airplane_capacity",
+            "tickets_available"
         )
+
+
+class TicketSerializer(serializers.ModelSerializer):
+
+    def validate(self, attrs):
+        data = super(TicketSerializer, self).validate(attrs=attrs)
+        Ticket.validate_ticket(
+            attrs["row"],
+            attrs["seat"],
+            attrs["flight"],
+            ValidationError,
+        )
+        return data
+
+    class Meta:
+        model = Ticket
+        fields = (
+            "id", "flight", "row", "seat", "price"
+        )
+
+
+class TicketSeatsSerializer(TicketSerializer):
+    class Meta:
+        model = Ticket
+        fields = ("row", "seat")
+
+
+class TicketListSerializer(TicketSerializer):
+    flight = FlightListSerializer(many=False, read_only=True)
 
 
 class FlightDetailSerializer(serializers.ModelSerializer):
@@ -127,23 +176,39 @@ class FlightDetailSerializer(serializers.ModelSerializer):
     route = RouteListSerializer(read_only=True)
     departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+    taken_places = TicketSeatsSerializer(
+        source="flight_ticket", many=True, read_only=True
+    )
 
     class Meta:
         model = Flight
         fields = (
-            "id", "airplane", "route", "departure_time", "arrival_time"
+            "id",
+            "airplane",
+            "route",
+            "departure_time",
+            "arrival_time",
+            "taken_places"
         )
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    tickets = TicketSerializer(
+        many=True, read_only=False, allow_empty=False
+    )
+
     class Meta:
         model = Order
-        fields = ("id", "created_at", "user",)
+        fields = ("id", "tickets", "created_at")
+
+        def create(self, validated_data):
+            with transaction.atomic():
+                tickets_data = validated_data.pop("tickets")
+                order = Order.objects.create(**validated_data)
+                for ticket_data in tickets_data:
+                    Ticket.objects.create(order=order, **ticket_data)
+                return order
 
 
-class TicketSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Ticket
-        fields = (
-            "id", "order", "flight", "row", "seat", "price"
-        )
+class OrderListSerializer(OrderSerializer):
+    tickets = TicketListSerializer(many=True, read_only=True)

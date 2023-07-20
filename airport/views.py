@@ -1,3 +1,4 @@
+from django.db.models import F, Count
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -28,6 +29,7 @@ from airport.serializers import (
     FlightListSerializer,
     FlightDetailSerializer,
     OrderSerializer,
+    OrderListSerializer,
 )
 
 
@@ -45,7 +47,7 @@ class AirplaneTypeViewSet(
 
 
 class AirplaneViewSet(viewsets.ModelViewSet):
-    queryset = Airplane.objects.all()
+    queryset = Airplane.objects.select_related("airplane_type")
     serializer_class = AirplaneSerializer
 
     def get_serializer_class(self):
@@ -92,7 +94,7 @@ class RouteViewSet(
     mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Route.objects.all()
+    queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
     pagination_class = ApiPagination
 
@@ -116,7 +118,18 @@ class CrewViewSet(viewsets.ModelViewSet):
 
 
 class FlightViewSet(viewsets.ModelViewSet):
-    queryset = Flight.objects.all()
+    queryset = (
+        Flight.objects
+        .select_related(
+            "route__source", "route__destination", "airplane__airplane_type"
+        ).prefetch_related("crews")
+        .annotate(
+            tickets_available=(
+                F("airplane__rows") * F("airplane__seats_in_row")
+                - Count("flight_ticket")
+            )
+        )
+    )
     serializer_class = FlightSerializer
 
     def get_serializer_class(self):
@@ -140,6 +153,12 @@ class OrderViewSet(
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == "list":
+            return OrderListSerializer
+
+        return super().get_serializer_class()
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
