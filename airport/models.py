@@ -34,7 +34,7 @@ class Route(models.Model):
     distance = models.PositiveIntegerField()
 
     def __str__(self):
-        return str(self.id)
+        return f"{self.id}: {self.source} - {self.destination}"
 
 
 class AirplaneType(models.Model):
