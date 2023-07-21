@@ -1,4 +1,6 @@
 from django.db.models import F, Count
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -44,17 +46,6 @@ class AirplaneTypeViewSet(
 ):
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
-
-    def get_queryset(self):
-        """Retrieve the airplane type with filter"""
-        name = self.request.query_params.get("name")
-
-        queryset = super().get_queryset()
-
-        if name:
-            queryset = queryset.filter(name__icontains=name)
-
-        return queryset
 
 
 class AirplaneViewSet(viewsets.ModelViewSet):
@@ -108,6 +99,23 @@ class AirplaneViewSet(viewsets.ModelViewSet):
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "name",
+                type=OpenApiTypes.STR,
+                description="Filter by airplane name (ex. ?name=boeing)",
+            ),
+            OpenApiParameter(
+                "airplane_type",
+                type=OpenApiTypes.STR,
+                description="Filter by airplane type (ex. ?type=compact)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class AirportViewSet(
     mixins.ListModelMixin,
@@ -128,6 +136,18 @@ class AirportViewSet(
             queryset = queryset.filter(name__icontains=name)
 
         return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "name",
+                type=OpenApiTypes.STR,
+                description="Filter by airport name (ex. ?name=Heathrow)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class RouteViewSet(
@@ -164,6 +184,26 @@ class RouteViewSet(
 
         return super().get_serializer_class()
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "source",
+                type=OpenApiTypes.STR,
+                description="Filter by route source (ex. ?source=Heathrow)",
+            ),
+            OpenApiParameter(
+                "destination",
+                type=OpenApiTypes.STR,
+                description=(
+                        "Filter by route destination "
+                        "(ex. ?destination=Indira Gandhi)"
+                ),
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
 
 class CrewViewSet(viewsets.ModelViewSet):
     queryset = Crew.objects.all()
@@ -186,6 +226,18 @@ class CrewViewSet(viewsets.ModelViewSet):
             return CrewListSerializer
 
         return super().get_serializer_class()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "position",
+                type=OpenApiTypes.STR,
+                description="Filter by position (ex. ?position=captain)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class FlightViewSet(viewsets.ModelViewSet):
@@ -238,6 +290,31 @@ class FlightViewSet(viewsets.ModelViewSet):
             return FlightDetailSerializer
 
         return super().get_serializer_class()
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "airplane",
+                type=OpenApiTypes.STR,
+                description="Filter by airplane name (ex. ?airplane=boeing)",
+            ),
+            OpenApiParameter(
+                "route_source",
+                type=OpenApiTypes.STR,
+                description="Filter by route source (ex. ?source=Indira Gandhi)",
+            ),
+            OpenApiParameter(
+                "route_destination",
+                type=OpenApiTypes.STR,
+                description=(
+                        "Filter by route destination "
+                        "(ex. ?destination=Heathrow)"
+                ),
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
 
 class OrderViewSet(
