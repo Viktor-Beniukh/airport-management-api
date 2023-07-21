@@ -49,6 +49,7 @@ class AirplaneTypeViewSet(
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.select_related("airplane_type")
     serializer_class = AirplaneSerializer
+    pagination_class = ApiPagination
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -87,6 +88,7 @@ class AirportViewSet(
 ):
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
+    pagination_class = ApiPagination
 
 
 class RouteViewSet(
@@ -120,9 +122,12 @@ class CrewViewSet(viewsets.ModelViewSet):
 class FlightViewSet(viewsets.ModelViewSet):
     queryset = (
         Flight.objects
-        .select_related(
-            "route__source", "route__destination", "airplane__airplane_type"
-        ).prefetch_related("crews")
+        .prefetch_related(
+            "route__source",
+            "route__destination",
+            "airplane__airplane_type",
+            "crews"
+        )
         .annotate(
             tickets_available=(
                 F("airplane__rows") * F("airplane__seats_in_row")
@@ -131,6 +136,7 @@ class FlightViewSet(viewsets.ModelViewSet):
         )
     )
     serializer_class = FlightSerializer
+    pagination_class = ApiPagination
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -147,7 +153,11 @@ class OrderViewSet(
     mixins.CreateModelMixin,
     viewsets.GenericViewSet
 ):
-    queryset = Order.objects.all()
+    queryset = Order.objects.prefetch_related(
+        "tickets__flight__route__source",
+        "tickets__flight__route__destination",
+        "tickets__flight__airplane__airplane_type"
+    )
     serializer_class = OrderSerializer
     pagination_class = ApiPagination
 

@@ -140,7 +140,8 @@ class Ticket(models.Model):
     )
 
     @staticmethod
-    def validate_ticket(row, seat, airplane, error_to_raise):
+    def validate_ticket(row, seat, flight, error_to_raise):
+        airplane = flight.airplane
         for ticket_attr_value, ticket_attr_name, airplane_attr_name in [
             (row, "row", "rows"),
             (seat, "seat", "seats_in_row"),
@@ -160,7 +161,7 @@ class Ticket(models.Model):
         Ticket.validate_ticket(
             self.row,
             self.seat,
-            self.flight.airplane,
+            self.flight,
             ValidationError,
         )
 

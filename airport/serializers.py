@@ -117,6 +117,9 @@ class FlightListSerializer(serializers.ModelSerializer):
     airplane_name = serializers.CharField(
         source="airplane.name", read_only=True
     )
+    airplane_type = serializers.CharField(
+        source="airplane.airplane_type.name", read_only=True
+    )
     airplane_image = serializers.ImageField(
         source="airplane.image", read_only=True
     )
@@ -133,6 +136,7 @@ class FlightListSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "airplane_name",
+            "airplane_type",
             "airplane_image",
             "route",
             "departure_time",
@@ -146,12 +150,14 @@ class TicketSerializer(serializers.ModelSerializer):
 
     def validate(self, attrs):
         data = super(TicketSerializer, self).validate(attrs=attrs)
+
         Ticket.validate_ticket(
             attrs["row"],
             attrs["seat"],
             attrs["flight"],
             ValidationError,
         )
+
         return data
 
     class Meta:
@@ -172,8 +178,9 @@ class TicketListSerializer(TicketSerializer):
 
 
 class FlightDetailSerializer(serializers.ModelSerializer):
-    airplane = AirplaneDetailSerializer(read_only=True)
-    route = RouteListSerializer(read_only=True)
+    airplane = AirplaneListSerializer(many=False, read_only=True)
+    crews = CrewListSerializer(many=True, read_only=True)
+    route = RouteListSerializer(many=False, read_only=True)
     departure_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     arrival_time = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
     taken_places = TicketSeatsSerializer(
@@ -185,6 +192,7 @@ class FlightDetailSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "airplane",
+            "crews",
             "route",
             "departure_time",
             "arrival_time",
@@ -201,14 +209,15 @@ class OrderSerializer(serializers.ModelSerializer):
         model = Order
         fields = ("id", "tickets", "created_at")
 
-        def create(self, validated_data):
-            with transaction.atomic():
-                tickets_data = validated_data.pop("tickets")
-                order = Order.objects.create(**validated_data)
-                for ticket_data in tickets_data:
-                    Ticket.objects.create(order=order, **ticket_data)
-                return order
+    def create(self, validated_data):
+        with transaction.atomic():
+            tickets_data = validated_data.pop("tickets")
+            order = Order.objects.create(**validated_data)
+            for ticket_data in tickets_data:
+                Ticket.objects.create(order=order, **ticket_data)
+            return order
 
 
 class OrderListSerializer(OrderSerializer):
     tickets = TicketListSerializer(many=True, read_only=True)
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
