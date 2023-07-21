@@ -4,7 +4,7 @@ from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, mixins, status
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAdminUser
+from rest_framework.permissions import IsAdminUser, IsAuthenticated
 from rest_framework.response import Response
 
 from airport.models import (
@@ -16,6 +16,7 @@ from airport.models import (
     Flight,
     Order,
 )
+from airport.permissions import IsAdminOrReadOnly
 from airport.serializers import (
     AirplaneTypeSerializer,
     AirplaneSerializer,
@@ -46,12 +47,14 @@ class AirplaneTypeViewSet(
 ):
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
+    permission_classes = (IsAdminUser,)
 
 
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.select_related("airplane_type")
     serializer_class = AirplaneSerializer
     pagination_class = ApiPagination
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_queryset(self):
         """Retrieve the airplane with filter"""
@@ -125,6 +128,7 @@ class AirportViewSet(
     queryset = Airport.objects.all()
     serializer_class = AirportSerializer
     pagination_class = ApiPagination
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_queryset(self):
         """Retrieve the airport with filter"""
@@ -158,6 +162,7 @@ class RouteViewSet(
     queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
     pagination_class = ApiPagination
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_queryset(self):
         """Retrieve the route with filter"""
@@ -195,8 +200,8 @@ class RouteViewSet(
                 "destination",
                 type=OpenApiTypes.STR,
                 description=(
-                        "Filter by route destination "
-                        "(ex. ?destination=Indira Gandhi)"
+                    "Filter by route destination "
+                    "(ex. ?destination=Indira Gandhi)"
                 ),
             ),
         ]
@@ -209,6 +214,7 @@ class CrewViewSet(viewsets.ModelViewSet):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
     pagination_class = ApiPagination
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_queryset(self):
         """Retrieve the crew with filter"""
@@ -258,6 +264,7 @@ class FlightViewSet(viewsets.ModelViewSet):
     )
     serializer_class = FlightSerializer
     pagination_class = ApiPagination
+    permission_classes = (IsAdminOrReadOnly,)
 
     def get_queryset(self):
         """Retrieve the flight with filter"""
@@ -301,14 +308,16 @@ class FlightViewSet(viewsets.ModelViewSet):
             OpenApiParameter(
                 "route_source",
                 type=OpenApiTypes.STR,
-                description="Filter by route source (ex. ?source=Indira Gandhi)",
+                description=(
+                    "Filter by route source (ex. ?source=Indira Gandhi)"
+                ),
             ),
             OpenApiParameter(
                 "route_destination",
                 type=OpenApiTypes.STR,
                 description=(
-                        "Filter by route destination "
-                        "(ex. ?destination=Heathrow)"
+                    "Filter by route destination "
+                    "(ex. ?destination=Heathrow)"
                 ),
             ),
         ]
@@ -329,6 +338,7 @@ class OrderViewSet(
     )
     serializer_class = OrderSerializer
     pagination_class = ApiPagination
+    permission_classes = (IsAuthenticated,)
 
     def get_queryset(self):
         return Order.objects.filter(user=self.request.user)
