@@ -119,11 +119,14 @@ class Order(models.Model):
         settings.AUTH_USER_MODEL, on_delete=models.CASCADE
     )
 
+    class Meta:
+        ordering = ["-created_at"]
+
     def __str__(self):
         return str(self.created_at)
 
-    class Meta:
-        ordering = ["-created_at"]
+    def total_cost(self):
+        return sum(ticket.get_cost() for ticket in self.tickets.all())
 
 
 class Ticket(models.Model):
@@ -185,3 +188,6 @@ class Ticket(models.Model):
         return (
             f"{str(self.flight)} (row: {self.row}, seat: {self.seat})"
         )
+
+    def get_cost(self):
+        return self.price * len(str(self.seat))

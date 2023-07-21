@@ -204,10 +204,13 @@ class OrderSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(
         many=True, read_only=False, allow_empty=False
     )
+    total_cost = serializers.DecimalField(
+        max_digits=10, decimal_places=2, read_only=True
+    )
 
     class Meta:
         model = Order
-        fields = ("id", "tickets", "created_at")
+        fields = ("id", "tickets", "total_cost", "created_at")
 
     def create(self, validated_data):
         with transaction.atomic():
