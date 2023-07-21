@@ -45,11 +45,39 @@ class AirplaneTypeViewSet(
     queryset = AirplaneType.objects.all()
     serializer_class = AirplaneTypeSerializer
 
+    def get_queryset(self):
+        """Retrieve the airplane type with filter"""
+        name = self.request.query_params.get("name")
+
+        queryset = super().get_queryset()
+
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+
+        return queryset
+
 
 class AirplaneViewSet(viewsets.ModelViewSet):
     queryset = Airplane.objects.select_related("airplane_type")
     serializer_class = AirplaneSerializer
     pagination_class = ApiPagination
+
+    def get_queryset(self):
+        """Retrieve the airplane with filter"""
+        name = self.request.query_params.get("name")
+        airplane_type = self.request.query_params.get("airplane_type")
+
+        queryset = super().get_queryset()
+
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+
+        if airplane_type:
+            queryset = queryset.filter(
+                airplane_type__name__icontains=airplane_type
+            )
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -90,6 +118,17 @@ class AirportViewSet(
     serializer_class = AirportSerializer
     pagination_class = ApiPagination
 
+    def get_queryset(self):
+        """Retrieve the airport with filter"""
+        name = self.request.query_params.get("name")
+
+        queryset = super().get_queryset()
+
+        if name:
+            queryset = queryset.filter(name__icontains=name)
+
+        return queryset
+
 
 class RouteViewSet(
     mixins.ListModelMixin,
@@ -99,6 +138,25 @@ class RouteViewSet(
     queryset = Route.objects.select_related("source", "destination")
     serializer_class = RouteSerializer
     pagination_class = ApiPagination
+
+    def get_queryset(self):
+        """Retrieve the route with filter"""
+        source = self.request.query_params.get("source")
+        destination = self.request.query_params.get("destination")
+
+        queryset = super().get_queryset()
+
+        if source:
+            queryset = queryset.filter(
+                source__name__icontains=source
+            )
+
+        if destination:
+            queryset = queryset.filter(
+                destination__name__icontains=destination
+            )
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -111,6 +169,17 @@ class CrewViewSet(viewsets.ModelViewSet):
     queryset = Crew.objects.all()
     serializer_class = CrewSerializer
     pagination_class = ApiPagination
+
+    def get_queryset(self):
+        """Retrieve the crew with filter"""
+        position = self.request.query_params.get("position")
+
+        queryset = super().get_queryset()
+
+        if position:
+            queryset = queryset.filter(position__icontains=position)
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
@@ -137,6 +206,29 @@ class FlightViewSet(viewsets.ModelViewSet):
     )
     serializer_class = FlightSerializer
     pagination_class = ApiPagination
+
+    def get_queryset(self):
+        """Retrieve the flight with filter"""
+        airplane = self.request.query_params.get("airplane")
+        route_source = self.request.query_params.get("route_source")
+        route_destination = self.request.query_params.get("route_destination")
+
+        queryset = super().get_queryset()
+
+        if airplane:
+            queryset = queryset.filter(airplane__name__icontains=airplane)
+
+        if route_source:
+            queryset = queryset.filter(
+                route__source__name__icontains=route_source
+            )
+
+        if route_destination:
+            queryset = queryset.filter(
+                route__destination__name__icontains=route_destination
+            )
+
+        return queryset
 
     def get_serializer_class(self):
         if self.action == "list":
