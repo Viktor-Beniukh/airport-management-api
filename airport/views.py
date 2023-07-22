@@ -365,10 +365,16 @@ class OrderViewSet(
         serializer.save(user=self.request.user)
 
 
-class PaymentViewSet(viewsets.ModelViewSet):
+class PaymentViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.CreateModelMixin,
+    viewsets.GenericViewSet
+):
     queryset = Payment.objects.select_related("order")
     serializer_class = PaymentSerializer
     permission_classes = (IsAuthenticated,)
+    pagination_class = ApiPagination
 
     def get_queryset(self) -> Payment:
         return Payment.objects.filter(
