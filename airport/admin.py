@@ -61,5 +61,9 @@ class TicketAdmin(admin.ModelAdmin):
     list_filter = ("order", "flight", "price")
 
 
+@admin.register(Payment)
+class PaymentAdmin(admin.ModelAdmin):
+    list_display = ("order", "status_payment", "date_payment")
+
+
 admin.site.register(AirplaneType)
-admin.site.register(Payment)
