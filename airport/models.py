@@ -15,7 +15,7 @@ def airplane_image_file_path(instance, filename):
 
 
 class Airport(models.Model):
-    name = models.CharField(max_length=255, unique=True)
+    name = models.CharField(max_length=255)
     closest_big_city = models.CharField(max_length=255)
 
     class Meta:
