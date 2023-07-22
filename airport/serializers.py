@@ -11,6 +11,7 @@ from airport.models import (
     Flight,
     Order,
     Ticket,
+    Payment,
 )
 
 
@@ -200,6 +201,47 @@ class FlightDetailSerializer(serializers.ModelSerializer):
         )
 
 
+class PaymentSerializer(serializers.ModelSerializer):
+    order = serializers.PrimaryKeyRelatedField(
+        queryset=Order.objects.select_related("user")
+    )
+    user_full_name = serializers.CharField(
+        source="order.user.full_name", read_only=True
+    )
+    status_payment = serializers.CharField(read_only=True)
+    date_payment = serializers.DateTimeField(format="%Y-%m-%d %H:%M", read_only=True)
+    session_url = serializers.URLField(read_only=True)
+    session_id = serializers.CharField(read_only=True)
+
+    class Meta:
+        model = Payment
+        fields = (
+            "id",
+            "order",
+            "user_full_name",
+            "status_payment",
+            "date_payment",
+            "session_url",
+            "session_id",
+        )
+
+
+class PaymentListSerializer(PaymentSerializer):
+    date_payment = serializers.DateTimeField(format="%Y-%m-%d %H:%M")
+
+    class Meta:
+        model = Payment
+        fields = ("status_payment", "date_payment")
+
+
+class PaymentUpdateSerializer(PaymentSerializer):
+    order = serializers.PrimaryKeyRelatedField(
+        many=False, read_only=True
+    )
+    session_url = serializers.URLField(read_only=True)
+    session_id = serializers.CharField(read_only=True)
+
+
 class OrderSerializer(serializers.ModelSerializer):
     tickets = TicketSerializer(
         many=True, read_only=False, allow_empty=False
@@ -207,10 +249,11 @@ class OrderSerializer(serializers.ModelSerializer):
     total_cost = serializers.DecimalField(
         max_digits=10, decimal_places=2, read_only=True
     )
+    payments = PaymentListSerializer(many=True, read_only=True)
 
     class Meta:
         model = Order
-        fields = ("id", "tickets", "total_cost", "created_at")
+        fields = ("id", "tickets", "created_at", "total_cost", "payments")
 
     def create(self, validated_data):
         with transaction.atomic():

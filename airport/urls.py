@@ -9,6 +9,10 @@ from airport.views import (
     CrewViewSet,
     FlightViewSet,
     OrderViewSet,
+    PaymentViewSet,
+    create_checkout_session,
+    payment_success,
+    payment_cancel,
 )
 
 
@@ -20,10 +24,18 @@ router.register("routes", RouteViewSet)
 router.register("crews", CrewViewSet)
 router.register("flights", FlightViewSet)
 router.register("orders", OrderViewSet)
+router.register("payment", PaymentViewSet)
 
 
 urlpatterns = [
     path("", include(router.urls)),
+    path(
+        "payment/<int:payment_id>/create-session/",
+        create_checkout_session,
+        name="create-session"
+    ),
+    path("success/", payment_success, name="success"),
+    path("cancelled/", payment_cancel, name="cancelled"),
 ]
 
 

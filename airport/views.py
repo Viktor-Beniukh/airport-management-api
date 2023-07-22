@@ -1,4 +1,9 @@
+import stripe
+from django.conf import settings
+
+from django.http import JsonResponse
 from django.db.models import F, Count
+from django.shortcuts import redirect
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, mixins, status
@@ -15,6 +20,7 @@ from airport.models import (
     Crew,
     Flight,
     Order,
+    Payment,
 )
 from airport.permissions import IsAdminOrReadOnly
 from airport.serializers import (
@@ -33,7 +39,13 @@ from airport.serializers import (
     FlightDetailSerializer,
     OrderSerializer,
     OrderListSerializer,
+    PaymentSerializer,
+    PaymentUpdateSerializer,
 )
+
+
+stripe.api_key = settings.STRIPE_SECRET_KEY
+DOMAIN_URL = "http://127.0.0.1:8000"
 
 
 class ApiPagination(PageNumberPagination):
@@ -351,3 +363,87 @@ class OrderViewSet(
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+class PaymentViewSet(viewsets.ModelViewSet):
+    queryset = Payment.objects.select_related("order")
+    serializer_class = PaymentSerializer
+    permission_classes = (IsAuthenticated,)
+
+    def get_queryset(self) -> Payment:
+        return Payment.objects.filter(
+            order__user=self.request.user
+        )
+
+    def get_serializer_class(self):
+        if self.action == "update":
+            return PaymentUpdateSerializer
+
+        return super().get_serializer_class()
+
+
+def create_checkout_session(request, payment_id: int) -> JsonResponse:
+    payment = Payment.objects.get(pk=payment_id)
+
+    if payment.status_payment == payment.PAID:
+        return JsonResponse(
+            {
+                "message": "You’ve already paid to this order of tickets"
+            }
+        )
+
+    else:
+        session = stripe.checkout.Session.create(
+            payment_method_types=["card"],
+            line_items=[
+                {
+                    "price_data": {
+                        "currency": "usd",
+                        "unit_amount": int(payment.order.total_cost() * 100),
+                        "product_data": {
+                            "name": f"Order #{payment.order_id}",
+                            "description": "Payment of tickets order",
+                        },
+                    },
+                    "quantity": 1,
+                },
+            ],
+            mode="payment",
+            success_url=DOMAIN_URL + "/success?session_id={CHECKOUT_SESSION_ID}",
+            cancel_url=DOMAIN_URL + (
+                "/cancelled?session_id={CHECKOUT_SESSION_ID}"
+            ),
+        )
+
+        payment.session_id = session.id
+        payment.session_url = session.url
+        payment.save()
+
+        return redirect(payment.session_url)
+
+
+def payment_success(request) -> JsonResponse:
+    session_id = request.GET.get("session_id")
+    payment = Payment.objects.get(session_id=session_id)
+    payment.status_payment = Payment.PAID
+
+    payment.save()
+
+    return JsonResponse(
+        {"message": "Payment successful!"}
+    )
+
+
+def payment_cancel(request) -> JsonResponse:
+    session_id = request.GET.get("session_id")
+    payment = Payment.objects.get(session_id=session_id)
+    payment.status_payment = Payment.CANCELLED
+    payment.save()
+
+    return JsonResponse(
+        {
+            "message": "Payment cancelled. "
+                       "The payment can be paid a bit later "
+                       "(but the session is available for only 24h)"
+        }
+    )
