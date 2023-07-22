@@ -9,6 +9,7 @@ from airport.models import (
     Flight,
     Order,
     Ticket,
+    Payment,
 )
 
 
@@ -61,3 +62,4 @@ class TicketAdmin(admin.ModelAdmin):
 
 
 admin.site.register(AirplaneType)
+admin.site.register(Payment)

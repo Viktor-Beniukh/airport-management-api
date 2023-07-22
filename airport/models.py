@@ -191,3 +191,27 @@ class Ticket(models.Model):
 
     def get_cost(self):
         return self.price * len(str(self.seat))
+
+
+class Payment(models.Model):
+    PENDING = "Pending"
+    PAID = "Paid"
+    CANCELLED = "Cancelled"
+
+    STATUS_CHOICES = [
+        (PENDING, "Pending"),
+        (PAID, "Paid"),
+        (CANCELLED, "Cancelled"),
+    ]
+
+    order = models.ForeignKey(
+        Order, on_delete=models.CASCADE, related_name="payments"
+    )
+    status_payment = models.CharField(
+        max_length=10, choices=STATUS_CHOICES, default=PENDING
+    )
+    session_url = models.URLField(max_length=500, blank=True)
+    session_id = models.CharField(max_length=255, blank=True)
+
+    def __str__(self) -> str:
+        return f"Payment {self.id} ({self.order_id} - {self.order.user})"
