@@ -210,6 +210,7 @@ class Payment(models.Model):
     status_payment = models.CharField(
         max_length=10, choices=STATUS_CHOICES, default=PENDING
     )
+    date_payment = models.DateTimeField(auto_now_add=True, null=True)
     session_url = models.URLField(max_length=500, blank=True)
     session_id = models.CharField(max_length=255, blank=True)
 
