@@ -209,7 +209,9 @@ class PaymentSerializer(serializers.ModelSerializer):
         source="order.user.full_name", read_only=True
     )
     status_payment = serializers.CharField(read_only=True)
-    date_payment = serializers.DateTimeField(format="%Y-%m-%d %H:%M", read_only=True)
+    date_payment = serializers.DateTimeField(
+        format="%Y-%m-%d %H:%M", read_only=True
+    )
     session_url = serializers.URLField(read_only=True)
     session_id = serializers.CharField(read_only=True)
 

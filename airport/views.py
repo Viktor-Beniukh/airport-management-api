@@ -408,7 +408,9 @@ def create_checkout_session(request, payment_id: int) -> JsonResponse:
                 },
             ],
             mode="payment",
-            success_url=DOMAIN_URL + "/success?session_id={CHECKOUT_SESSION_ID}",
+            success_url=(
+                DOMAIN_URL + "/success?session_id={CHECKOUT_SESSION_ID}"
+            ),
             cancel_url=DOMAIN_URL + (
                 "/cancelled?session_id={CHECKOUT_SESSION_ID}"
             ),
