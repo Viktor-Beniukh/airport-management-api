@@ -40,7 +40,6 @@ from airport.serializers import (
     OrderSerializer,
     OrderListSerializer,
     PaymentSerializer,
-    PaymentUpdateSerializer,
 )
 
 
@@ -321,7 +320,7 @@ class FlightViewSet(viewsets.ModelViewSet):
                 "route_source",
                 type=OpenApiTypes.STR,
                 description=(
-                    "Filter by route source (ex. ?source=Indira Gandhi)"
+                    "Filter by route source (ex. ?route_source=Indira Gandhi)"
                 ),
             ),
             OpenApiParameter(
@@ -329,7 +328,7 @@ class FlightViewSet(viewsets.ModelViewSet):
                 type=OpenApiTypes.STR,
                 description=(
                     "Filter by route destination "
-                    "(ex. ?destination=Heathrow)"
+                    "(ex. ?route_destination=Heathrow)"
                 ),
             ),
         ]
