@@ -381,12 +381,6 @@ class PaymentViewSet(
             order__user=self.request.user
         )
 
-    def get_serializer_class(self):
-        if self.action == "update":
-            return PaymentUpdateSerializer
-
-        return super().get_serializer_class()
-
 
 def create_checkout_session(request, payment_id: int) -> JsonResponse:
     payment = Payment.objects.get(pk=payment_id)
