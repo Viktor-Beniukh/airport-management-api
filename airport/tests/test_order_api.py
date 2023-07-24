@@ -3,11 +3,10 @@ import datetime
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-
 from rest_framework import status
 from rest_framework.test import APIClient
 
-from airport.models import Order, Ticket, Airport, Route, AirplaneType, Airplane, Flight
+from airport.models import Order, Airport, Route, AirplaneType, Airplane, Flight
 from airport.serializers import OrderListSerializer
 from airport.views import ApiPagination
 

@@ -15,7 +15,6 @@ from airport.views import (
     payment_cancel,
 )
 
-
 router = routers.DefaultRouter()
 router.register("airplane-types", AirplaneTypeViewSet)
 router.register("airplanes", AirplaneViewSet)
@@ -25,7 +24,6 @@ router.register("crews", CrewViewSet)
 router.register("flights", FlightViewSet)
 router.register("orders", OrderViewSet)
 router.register("payment", PaymentViewSet)
-
 
 urlpatterns = [
     path("", include(router.urls)),
@@ -37,6 +35,5 @@ urlpatterns = [
     path("success/", payment_success, name="success"),
     path("cancelled/", payment_cancel, name="cancelled"),
 ]
-
 
 app_name = "airport"

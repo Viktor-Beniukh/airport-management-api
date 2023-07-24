@@ -6,14 +6,12 @@ from PIL import Image
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from airport.models import Airplane, AirplaneType, Airport, Route, Flight
 from airport.serializers import AirplaneListSerializer, AirplaneDetailSerializer
 from airport.views import ApiPagination
-
 
 AIRPLANE_URL = reverse("airport:airplane-list")
 FLIGHT_URL = reverse("airport:flight-list")

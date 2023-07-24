@@ -1,12 +1,10 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from airport.models import AirplaneType
-
 
 AIRPLANE_TYPE_URL = reverse("airport:airplanetype-list")
 
@@ -41,7 +39,6 @@ class AdminAirplaneTypeApiTests(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_create_airplane_type(self):
-
         payload = {
             "name": "Compact",
         }

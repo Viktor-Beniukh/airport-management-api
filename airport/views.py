@@ -1,8 +1,7 @@
 import stripe
 from django.conf import settings
-
-from django.http import JsonResponse
 from django.db.models import F, Count
+from django.http import JsonResponse
 from django.shortcuts import redirect
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
@@ -41,7 +40,6 @@ from airport.serializers import (
     OrderListSerializer,
     PaymentSerializer,
 )
-
 
 stripe.api_key = settings.STRIPE_SECRET_KEY
 DOMAIN_URL = "http://127.0.0.1:8000"

@@ -1,13 +1,11 @@
-from django.test import TestCase
 from django.contrib.auth import get_user_model
+from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 
 from user.serializers import UserSerializer
 
-
 USER_CREATE_URL = reverse("user:create")
-
 
 User = get_user_model()
 
@@ -60,7 +58,6 @@ class CreateUserViewTests(TestCase):
         User.objects.all().delete()
 
     def test_create_user(self):
-
         data = {
             "email": "test@test.com",
             "username": "testuser",

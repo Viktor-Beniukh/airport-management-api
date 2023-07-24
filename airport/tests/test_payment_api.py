@@ -1,17 +1,13 @@
-import datetime
-
-from django.utils import timezone
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from airport.models import Order, Payment
 from airport.serializers import PaymentSerializer
 from airport.views import ApiPagination
-
 
 PAYMENT_URL = reverse("airport:payment-list")
 

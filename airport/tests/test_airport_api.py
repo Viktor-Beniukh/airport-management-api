@@ -1,14 +1,12 @@
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 from django.urls import reverse
-
 from rest_framework import status
 from rest_framework.test import APIClient
 
 from airport.models import Airport
 from airport.serializers import AirportSerializer
 from airport.views import ApiPagination
-
 
 AIRPORT_URL = reverse("airport:airport-list")
 
@@ -91,7 +89,6 @@ class AdminAirportApiTests(TestCase):
         self.client.force_authenticate(self.user)
 
     def test_create_airport(self):
-
         payload = {
             "name": "Heathrow",
             "closest_big_city": "London",
